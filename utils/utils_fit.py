@@ -39,12 +39,11 @@ def fit_one_epoch(model, train_util, loss_history, eval_callback, optimizer, epo
             pbar.update(1)
     print('Finish supervise Train')
 
-    total_loss = 0
-    rpn_loc_loss = 0
-    rpn_cls_loss = 0
-    roi_loc_loss = 0
-    roi_cls_loss = 0
     if gen_unsup != None:
+        rpn_loc_loss = 0
+        rpn_cls_loss = 0
+        roi_loc_loss = 0
+        roi_cls_loss = 0
         print('Start Unsupervise Train')
         with tqdm(total=len(gen_unsup),desc=f'Epoch {epoch + 1}/{Epoch}',postfix=dict,mininterval=0.3) as pbar:
             count = 0
@@ -59,13 +58,13 @@ def fit_one_epoch(model, train_util, loss_history, eval_callback, optimizer, epo
                         images = images.cuda()
 
                 rpn_loc, rpn_cls, roi_loc, roi_cls, total = train_util.train_step(images, boxes, labels, 1, fp16, scaler, False)
-                total_loss      += total.item()
-                rpn_loc_loss    += rpn_loc.item()
-                rpn_cls_loss    += rpn_cls.item()
-                roi_loc_loss    += roi_loc.item()
-                roi_cls_loss    += roi_cls.item()
+                total_loss_unsup += total.item()
+                rpn_loc_loss     += rpn_loc.item()
+                rpn_cls_loss     += rpn_cls.item()
+                roi_loc_loss     += roi_loc.item()
+                roi_cls_loss     += roi_cls.item()
                 
-                pbar.set_postfix(**{'total_loss'    : total_loss / count,
+                pbar.set_postfix(**{'total_loss'    : total_loss_unsup / count,
                                     'rpn_loc'       : rpn_loc_loss / count,
                                     'rpn_cls'       : rpn_cls_loss / count,
                                     'roi_loc'       : roi_loc_loss / count,
