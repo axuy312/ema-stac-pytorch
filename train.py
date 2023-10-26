@@ -476,8 +476,8 @@ if __name__ == "__main__":
                 
             set_optimizer_lr(optimizer, lr_scheduler_func, epoch)
           
-            print("Epoch:", epoch, ":", datetime.now())  # 取得現在時間
+            print("Epoch:", epoch, ":", datetime.datetime.now())  # 取得現在時間
             fit_one_epoch(model, train_util, loss_history, eval_callback, optimizer, epoch, epoch_step, epoch_step_val, gen_sup, gen_unsup, gen_val, UnFreeze_Epoch, Cuda, fp16, scaler, save_period, save_dir)
-            print("Epoch:", epoch, " finish:", datetime.now())  # 取得現在時間
+            print("Epoch:", epoch, " finish:", datetime.datetime.now())  # 取得現在時間
           
         loss_history.writer.close()
