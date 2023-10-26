@@ -10,7 +10,7 @@ from utils.utils import get_classes
 # 如果產生的train.txt裡面沒有目標訊息
 # 那麼就是因為classes沒有設定正確
 #-------------------------------------------------------------------#
-classes_path = 'model_data/voc_classes.txt'
+classes_path = 'model_data/classes.txt'
 classes, _ = get_classes(classes_path)
 #-------------------------------------------------------#
 # 資料集名稱
