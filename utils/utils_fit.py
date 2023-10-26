@@ -40,6 +40,7 @@ def fit_one_epoch(model, train_util, loss_history, eval_callback, optimizer, epo
     print('Finish supervise Train')
 
     if gen_unsup != None:
+        total_loss_unsup = 0
         rpn_loc_loss = 0
         rpn_cls_loss = 0
         roi_loc_loss = 0
