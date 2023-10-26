@@ -159,7 +159,7 @@ if __name__ == "__main__":
     #                       (当Freeze_Train=False时失效)
     #------------------------------------------------------------------#
     Init_Epoch          = 0
-    Freeze_Epoch        = 10
+    Freeze_Epoch        = 3
     Freeze_batch_size   = 4
     #------------------------------------------------------------------#
     #   解冻阶段训练参数
@@ -170,7 +170,7 @@ if __name__ == "__main__":
     #                           Adam可以使用相对较小的UnFreeze_Epoch
     #   Unfreeze_batch_size     模型在解冻后的batch_size
     #------------------------------------------------------------------#
-    UnFreeze_Epoch      = 10
+    UnFreeze_Epoch      = 1
     Unfreeze_batch_size = 2
     #------------------------------------------------------------------#
     #   Freeze_Train    是否进行冻结训练
