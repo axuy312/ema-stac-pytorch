@@ -31,7 +31,7 @@ class FRCNN(object):
         #   如果出现shape不匹配，同时要注意训练时的model_path和classes_path参数的修改
         #--------------------------------------------------------------------------#
         "model_path"    : 'logs/ex1/ep180-loss0.755-val_loss1.298.pth',
-        "classes_path"  : 'model_data/voc_classes.txt',
+        "classes_path"  : 'model_data/classes.txt',
         #---------------------------------------------------------------------#
         #   网络的主干特征提取网络，resnet50或者vgg
         #---------------------------------------------------------------------#
