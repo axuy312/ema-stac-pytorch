@@ -1,7 +1,7 @@
 import numpy as np
 
 #--------------------------------------------#
-#   生成基础的先验框
+# 產生基礎的先驗框
 #--------------------------------------------#
 def generate_anchor_base(base_size=16, ratios=[0.5, 1, 2], anchor_scales=[8, 16, 32]):
     anchor_base = np.zeros((len(ratios) * len(anchor_scales), 4), dtype=np.float32)
@@ -18,11 +18,11 @@ def generate_anchor_base(base_size=16, ratios=[0.5, 1, 2], anchor_scales=[8, 16,
     return anchor_base
 
 #--------------------------------------------#
-#   对基础先验框进行拓展对应到所有特征点上
+# 對基礎先驗框進行拓展對應到所有特徵點上
 #--------------------------------------------#
 def _enumerate_shifted_anchor(anchor_base, feat_stride, height, width):
     #---------------------------------#
-    #   计算网格中心点
+    # 計算網格中心點
     #---------------------------------#
     shift_x             = np.arange(0, width * feat_stride, feat_stride)
     shift_y             = np.arange(0, height * feat_stride, feat_stride)
@@ -30,13 +30,13 @@ def _enumerate_shifted_anchor(anchor_base, feat_stride, height, width):
     shift               = np.stack((shift_x.ravel(), shift_y.ravel(), shift_x.ravel(), shift_y.ravel(),), axis=1)
 
     #---------------------------------#
-    #   每个网格点上的9个先验框
+    # 每個網格點上的9個先驗框
     #---------------------------------#
     A       = anchor_base.shape[0]
     K       = shift.shape[0]
     anchor  = anchor_base.reshape((1, A, 4)) + shift.reshape((K, 1, 4))
     #---------------------------------#
-    #   所有的先验框
+    # 所有的先驗框
     #---------------------------------#
     anchor  = anchor.reshape((K * A, 4)).astype(np.float32)
     return anchor
