@@ -5,8 +5,8 @@ import torch
 from PIL import Image
 
 #---------------------------------------------------------#
-#   将图像转换成RGB图像，防止灰度图在预测时报错。
-#   代码仅仅支持RGB图像的预测，所有其它类型的图像都会转化成RGB
+# 將影像轉換成RGB影像，防止灰階圖在預測時報錯。
+# 程式碼僅支援RGB影像的預測，所有其它類型的影像都會轉換成RGB
 #---------------------------------------------------------#
 def cvtColor(image):
     if len(np.shape(image)) == 3 and np.shape(image)[2] == 3:
@@ -16,7 +16,7 @@ def cvtColor(image):
         return image 
 
 #---------------------------------------------------#
-#   对输入图像进行resize
+# 對影像輸入進行調整大小
 #---------------------------------------------------#
 def resize_image(image, size):
     w, h        = size
@@ -24,7 +24,7 @@ def resize_image(image, size):
     return new_image
 
 #---------------------------------------------------#
-#   获得类
+# 獲得class
 #---------------------------------------------------#
 def get_classes(classes_path):
     with open(classes_path, encoding='utf-8') as f:
@@ -33,14 +33,14 @@ def get_classes(classes_path):
     return class_names, len(class_names)
 
 #---------------------------------------------------#
-#   获得学习率
+# 獲得學習率
 #---------------------------------------------------#
 def get_lr(optimizer):
     for param_group in optimizer.param_groups:
         return param_group['lr']
 
 #---------------------------------------------------#
-#   设置种子
+# 設定種子
 #---------------------------------------------------#
 def seed_everything(seed=11):
     random.seed(seed)
@@ -52,7 +52,7 @@ def seed_everything(seed=11):
     torch.backends.cudnn.benchmark = False
 
 #---------------------------------------------------#
-#   设置Dataloader的种子
+# 設定Dataloader的種子
 #---------------------------------------------------#
 def worker_init_fn(worker_id, rank, seed):
     worker_seed = rank + seed
