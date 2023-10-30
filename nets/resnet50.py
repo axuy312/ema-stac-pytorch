@@ -45,7 +45,7 @@ class Bottleneck(nn.Module):
 class ResNet(nn.Module):
     def __init__(self, block, layers, num_classes=1000):
         #-----------------------------------#
-        #   假设输入进来的图片是600,600,3
+        # 假設輸入進來的圖片是600,600,3
         #-----------------------------------#
         self.inplanes = 64
         super(ResNet, self).__init__()
@@ -81,7 +81,7 @@ class ResNet(nn.Module):
     def _make_layer(self, block, planes, blocks, stride=1):
         downsample = None
         #-------------------------------------------------------------------#
-        #   当模型需要进行高和宽的压缩的时候，就需要用到残差边的downsample
+        # 當模型需要進行高和寬的壓縮的時候，就需要用到殘差邊的downsample
         #-------------------------------------------------------------------#
         if stride != 1 or self.inplanes != planes * block.expansion:
             downsample = nn.Sequential(
@@ -117,11 +117,11 @@ def resnet50(pretrained = False):
         state_dict = load_state_dict_from_url("https://download.pytorch.org/models/resnet50-19c8e357.pth", model_dir="./model_data")
         model.load_state_dict(state_dict)
     #----------------------------------------------------------------------------#
-    #   获取特征提取部分，从conv1到model.layer3，最终获得一个38,38,1024的特征层
+    # 取得特徵提取部分，從conv1到model.layer3，最終獲得一個38,38,1024的特徵層
     #----------------------------------------------------------------------------#
     features    = list([model.conv1, model.bn1, model.relu, model.maxpool, model.layer1, model.layer2, model.layer3])
     #----------------------------------------------------------------------------#
-    #   获取分类部分，从model.layer4到model.avgpool
+    # 取得分類部分，從model.layer4到model.avgpool
     #----------------------------------------------------------------------------#
     classifier  = list([model.layer4, model.avgpool])
     
