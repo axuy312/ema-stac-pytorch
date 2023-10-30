@@ -8,11 +8,12 @@ from utils.utils import cvtColor, preprocess_input
 
 
 class FRCNNDataset(Dataset):
-    def __init__(self, annotation_lines, input_shape = [600, 600], train = True):
+    def __init__(self, annotation_lines, input_shape = [600, 600], train = True, cutout = False):
         self.annotation_lines   = annotation_lines
         self.length             = len(annotation_lines)
         self.input_shape        = input_shape
         self.train              = train
+        self.cutout             = cutout
 
     def __len__(self):
         return self.length
@@ -148,6 +149,28 @@ class FRCNNDataset(Dataset):
             box_w = box[:, 2] - box[:, 0]
             box_h = box[:, 3] - box[:, 1]
             box = box[np.logical_and(box_w>1, box_h>1)] 
+        
+        #---------------------------------------------------
+        #   對影像作cutout argumentation
+        #---------------------------------------------------
+        if self.cutout:
+            square_size = 16
+            num_cutout = 50
+            iou_threashold = 0.2
+            gray_square = np.ones((square_size, square_size, 3), dtype=np.uint8) * 128  # 128 表示灰色
+            while num_cutout > 0:
+                g_x = int(np.random.uniform(0, w - square_size))
+                g_y =int(np.random.uniform(0, h - square_size))
+                cutout_box = [g_x, g_y, g_x + square_size, g_y + square_size]
+                iou_threashold_pass = True
+                for b in box:
+                    if (calculate_box_overlay_ratio(b, cutout_box) > iou_threashold):
+                        iou_threashold_pass = False
+                        break
+                if iou_threashold_pass:
+                    image_data[g_y:g_y+square_size, g_x:g_x+square_size] = gray_square
+                    num_cutout -= 1
+        
         
         return image_data, box
 
