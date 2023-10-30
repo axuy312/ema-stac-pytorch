@@ -17,13 +17,13 @@ class FasterRCNN(nn.Module):
         super(FasterRCNN, self).__init__()
         self.feat_stride = feat_stride
         #---------------------------------#
-        #   一共存在两个主干
-        #   vgg和resnet50
+        # 一共存在兩個backbone
+        # vgg和resnet50
         #---------------------------------#
         if backbone == 'vgg':
             self.extractor, classifier = decom_vgg16(pretrained)
             #---------------------------------#
-            #   构建建议框网络
+            # 建立Region Proposal Network(RPN)
             #---------------------------------#
             self.rpn = RegionProposalNetwork(
                 512, 512,
@@ -33,7 +33,7 @@ class FasterRCNN(nn.Module):
                 mode            = mode
             )
             #---------------------------------#
-            #   构建分类器网络
+            # 建構classifier網絡(VGG)
             #---------------------------------#
             self.head = VGG16RoIHead(
                 n_class         = num_classes + 1,
@@ -44,7 +44,7 @@ class FasterRCNN(nn.Module):
         elif backbone == 'resnet50':
             self.extractor, classifier = resnet50(pretrained)
             #---------------------------------#
-            #   构建classifier网络
+            # 建立Region Proposal Network(RPN)
             #---------------------------------#
             self.rpn = RegionProposalNetwork(
                 1024, 512,
@@ -54,7 +54,7 @@ class FasterRCNN(nn.Module):
                 mode            = mode
             )
             #---------------------------------#
-            #   构建classifier网络
+            # 建構classifier網絡(resnet)
             #---------------------------------#
             self.head = Resnet50RoIHead(
                 n_class         = num_classes + 1,
@@ -66,40 +66,40 @@ class FasterRCNN(nn.Module):
     def forward(self, x, scale=1., mode="forward"):
         if mode == "forward":
             #---------------------------------#
-            #   计算输入图片的大小
+            # 計算輸入圖片的大小
             #---------------------------------#
             img_size        = x.shape[2:]
             #---------------------------------#
-            #   利用主干网络提取特征
+            # 利用backbone網路提取特徵
             #---------------------------------#
             base_feature    = self.extractor.forward(x)
 
             #---------------------------------#
-            #   获得建议框
+            # 獲得建議框(Proposal)
             #---------------------------------#
             _, _, rois, roi_indices, _  = self.rpn.forward(base_feature, img_size, scale)
             #---------------------------------------#
-            #   获得classifier的分类结果和回归结果
+            # 獲得classifier的分類結果和迴歸結果
             #---------------------------------------#
             roi_cls_locs, roi_scores    = self.head.forward(base_feature, rois, roi_indices, img_size)
             return roi_cls_locs, roi_scores, rois, roi_indices
         elif mode == "extractor":
             #---------------------------------#
-            #   利用主干网络提取特征
+            #  利用backbone網路提取特徵
             #---------------------------------#
             base_feature    = self.extractor.forward(x)
             return base_feature
         elif mode == "rpn":
             base_feature, img_size = x
             #---------------------------------#
-            #   获得建议框
+            # 獲得建議框(Proposal)
             #---------------------------------#
             rpn_locs, rpn_scores, rois, roi_indices, anchor = self.rpn.forward(base_feature, img_size, scale)
             return rpn_locs, rpn_scores, rois, roi_indices, anchor
         elif mode == "head":
             base_feature, rois, roi_indices, img_size = x
             #---------------------------------------#
-            #   获得classifier的分类结果和回归结果
+            # 獲得classifier的分類結果和迴歸結果
             #---------------------------------------#
             roi_cls_locs, roi_scores    = self.head.forward(base_feature, rois, roi_indices, img_size)
             return roi_cls_locs, roi_scores
