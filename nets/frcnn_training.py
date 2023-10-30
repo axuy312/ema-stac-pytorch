@@ -58,28 +58,28 @@ class AnchorTargetCreator(object):
 
     def _calc_ious(self, anchor, bbox):
         #----------------------------------------------#
-        #   anchor和bbox的iou
-        #   获得的ious的shape为[num_anchors, num_gt]
+        # anchor和bbox的iou
+        # 獲得的ious的shape為[num_anchors, num_gt]
         #----------------------------------------------#
         ious = bbox_iou(anchor, bbox)
 
         if len(bbox)==0:
             return np.zeros(len(anchor), np.int32), np.zeros(len(anchor)), np.zeros(len(bbox))
-        #---------------------------------------------------------#
-        #   获得每一个先验框最对应的真实框  [num_anchors, ]
-        #---------------------------------------------------------#
+        #------------------------------------------------- --------#
+        # 取得每一個先驗框最對應的真實框 [num_anchors, ]
+        #------------------------------------------------- --------#
         argmax_ious = ious.argmax(axis=1)
-        #---------------------------------------------------------#
-        #   找出每一个先验框最对应的真实框的iou  [num_anchors, ]
-        #---------------------------------------------------------#
+        #------------------------------------------------- --------#
+        # 找出每一個先驗框最對應的真實框的iou [num_anchors, ]
+        #------------------------------------------------- --------#
         max_ious = np.max(ious, axis=1)
-        #---------------------------------------------------------#
-        #   获得每一个真实框最对应的先验框  [num_gt, ]
-        #---------------------------------------------------------#
+        #------------------------------------------------- --------#
+        # 取得每一個真實框最對應的先驗框 [num_gt, ]
+        #------------------------------------------------- --------#
         gt_argmax_ious = ious.argmax(axis=0)
-        #---------------------------------------------------------#
-        #   保证每一个真实框都存在对应的先验框
-        #---------------------------------------------------------#
+        #------------------------------------------------- --------#
+        # 保證每一個真實框都存在對應的先驗框
+        #------------------------------------------------- --------#
         for i in range(len(gt_argmax_ious)):
             argmax_ious[gt_argmax_ious[i]] = i
 
@@ -87,41 +87,41 @@ class AnchorTargetCreator(object):
         
     def _create_label(self, anchor, bbox):
         # ------------------------------------------ #
-        #   1是正样本，0是负样本，-1忽略
-        #   初始化的时候全部设置为-1
+        # 1是正樣本，0是負樣本，-1忽略
+        # 初始化的時候全部設定為-1
         # ------------------------------------------ #
         label = np.empty((len(anchor),), dtype=np.int32)
         label.fill(-1)
 
-        # ------------------------------------------------------------------------ #
-        #   argmax_ious为每个先验框对应的最大的真实框的序号         [num_anchors, ]
-        #   max_ious为每个真实框对应的最大的真实框的iou             [num_anchors, ]
-        #   gt_argmax_ious为每一个真实框对应的最大的先验框的序号    [num_gt, ]
-        # ------------------------------------------------------------------------ #
+        # ------------------------------------------------- ----------------------- #
+        # argmax_ious為每個先驗框對應的最大的真實框的序號 [num_anchors, ]
+        # max_ious為每個真實框對應的最大的真實框的iou [num_anchors, ]
+        # gt_argmax_ious為每個真實框對應的最大的先驗框的序號 [num_gt, ]
+        # ------------------------------------------------- ----------------------- #
         argmax_ious, max_ious, gt_argmax_ious = self._calc_ious(anchor, bbox)
         
-        # ----------------------------------------------------- #
-        #   如果小于门限值则设置为负样本
-        #   如果大于门限值则设置为正样本
-        #   每个真实框至少对应一个先验框
-        # ----------------------------------------------------- #
+        # ------------------------------------------------- ---- #
+        # 若小於閘限值則設定為負樣本
+        # 若大於門限值則設定為正樣本
+        # 每個真實框至少對應一個先驗框
+        # ------------------------------------------------- ---- #
         label[max_ious < self.neg_iou_thresh] = 0
         label[max_ious >= self.pos_iou_thresh] = 1
         if len(gt_argmax_ious)>0:
             label[gt_argmax_ious] = 1
 
-        # ----------------------------------------------------- #
-        #   判断正样本数量是否大于128，如果大于则限制在128
-        # ----------------------------------------------------- #
+        # ------------------------------------------------- ---- #
+        # 判斷正樣本數是否大於128，若大於則限制在128
+        # ------------------------------------------------- ---- #
         n_pos = int(self.pos_ratio * self.n_sample)
         pos_index = np.where(label == 1)[0]
         if len(pos_index) > n_pos:
             disable_index = np.random.choice(pos_index, size=(len(pos_index) - n_pos), replace=False)
             label[disable_index] = -1
 
-        # ----------------------------------------------------- #
-        #   平衡正负样本，保持总数量为256
-        # ----------------------------------------------------- #
+        # ------------------------------------------------- ---- #
+        # 平衡正負樣本，維持總數為256
+        # ------------------------------------------------- ---- #
         n_neg = self.n_sample - np.sum(label == 1)
         neg_index = np.where(label == 0)[0]
         if len(neg_index) > n_neg:
@@ -142,9 +142,9 @@ class ProposalTargetCreator(object):
 
     def __call__(self, roi, bbox, label, loc_normalize_std=(0.1, 0.1, 0.2, 0.2)):
         roi = np.concatenate((roi.detach().cpu().numpy(), bbox), axis=0)
-        # ----------------------------------------------------- #
-        #   计算建议框和真实框的重合程度
-        # ----------------------------------------------------- #
+        # ------------------------------------------------- ---- #
+        # 計算建議框和真實框的重合程度
+        # ------------------------------------------------- ---- #
         iou = bbox_iou(roi, bbox)
         
         if len(bbox)==0:
@@ -152,32 +152,32 @@ class ProposalTargetCreator(object):
             max_iou = np.zeros(len(roi))
             gt_roi_label = np.zeros(len(roi))
         else:
-            #---------------------------------------------------------#
-            #   获得每一个建议框最对应的真实框  [num_roi, ]
-            #---------------------------------------------------------#
+            #------------------------------------------------- --------#
+            # 取得每一個建議框最對應的真實框 [num_roi, ]
+            #------------------------------------------------- --------#
             gt_assignment = iou.argmax(axis=1)
-            #---------------------------------------------------------#
-            #   获得每一个建议框最对应的真实框的iou  [num_roi, ]
-            #---------------------------------------------------------#
+            #------------------------------------------------- --------#
+            # 獲得每一個建議框最對應的真實框的iou [num_roi, ]
+            #------------------------------------------------- --------#
             max_iou = iou.max(axis=1)
-            #---------------------------------------------------------#
-            #   真实框的标签要+1因为有背景的存在
-            #---------------------------------------------------------#
+            #------------------------------------------------- --------#
+            # 真實框的標籤要+1因為有背景的存在
+            #------------------------------------------------- --------#
             gt_roi_label = label[gt_assignment] + 1
 
-        #----------------------------------------------------------------#
-        #   满足建议框和真实框重合程度大于neg_iou_thresh_high的作为负样本
-        #   将正样本的数量限制在self.pos_roi_per_image以内
-        #----------------------------------------------------------------#
+        #------------------------------------------------- ---------------#
+        # 滿足建議框和真實框重疊程度大於neg_iou_thresh_high的作為負樣本
+        # 將正樣本的數量限制在self.pos_roi_per_image以內
+        #------------------------------------------------- ---------------#
         pos_index = np.where(max_iou >= self.pos_iou_thresh)[0]
         pos_roi_per_this_image = int(min(self.pos_roi_per_image, pos_index.size))
         if pos_index.size > 0:
             pos_index = np.random.choice(pos_index, size=pos_roi_per_this_image, replace=False)
 
-        #-----------------------------------------------------------------------------------------------------#
-        #   满足建议框和真实框重合程度小于neg_iou_thresh_high大于neg_iou_thresh_low作为负样本
-        #   将正样本的数量和负样本的数量的总和固定成self.n_sample
-        #-----------------------------------------------------------------------------------------------------#
+        #------------------------------------------------- -------------------------------------------------- --#
+        # 滿足建議框和真實框重疊程度小於neg_iou_thresh_high大於neg_iou_thresh_low作為負樣本
+        # 將正樣本的數量和負樣本的數量的總和固定成self.n_sample
+        #------------------------------------------------- -------------------------------------------------- --#
         neg_index = np.where((max_iou < self.neg_iou_thresh_high) & (max_iou >= self.neg_iou_thresh_low))[0]
         neg_roi_per_this_image = self.n_sample - pos_roi_per_this_image
         neg_roi_per_this_image = int(min(neg_roi_per_this_image, neg_index.size))
@@ -239,12 +239,12 @@ class FasterRCNNTrainer(nn.Module):
         n           = imgs.shape[0]
         img_size    = imgs.shape[2:]
         #-------------------------------#
-        #   获取公用特征层
+        #   取得公用特徵層
         #-------------------------------#
         base_feature = self.model_train(imgs, mode = 'extractor')
 
         # -------------------------------------------------- #
-        #   利用rpn网络获得调整参数、得分、建议框、先验框
+        #   利用rpn網路取得調整參數、得分、建議框、先驗框
         # -------------------------------------------------- #
         rpn_locs, rpn_scores, rois, roi_indices, anchor = self.model_train(x = [base_feature, img_size], scale = scale, mode = 'rpn')
         
@@ -260,18 +260,18 @@ class FasterRCNNTrainer(nn.Module):
             rpn_loc     = rpn_locs[i]
             rpn_score   = rpn_scores[i]
             roi         = rois[i]
-            # -------------------------------------------------- #
-            #   利用真实框和先验框获得建议框网络应该有的预测结果
-            #   给每个先验框都打上标签
-            #   gt_rpn_loc      [num_anchors, 4]
-            #   gt_rpn_label    [num_anchors, ]
-            # -------------------------------------------------- #
+            # ------------------------------------------------- - #
+            # 利用真實框框和先驗框獲得建議框網絡應有的預測結果
+            # 給每個先驗框都貼上標籤
+            # gt_rpn_loc [num_anchors, 4]
+            # gt_rpn_label [num_anchors, ]
+            # ------------------------------------------------- - #
             gt_rpn_loc, gt_rpn_label    = self.anchor_target_creator(bbox, anchor[0].cpu().numpy())
             gt_rpn_loc                  = torch.Tensor(gt_rpn_loc).type_as(rpn_locs)
             gt_rpn_label                = torch.Tensor(gt_rpn_label).type_as(rpn_locs).long()
-            # -------------------------------------------------- #
-            #   分别计算建议框网络的回归损失和分类损失
-            # -------------------------------------------------- #
+            # ------------------------------------------------- - #
+            # 分別計算建議框網路的迴歸損失和分類損失
+            # ------------------------------------------------- - #
             if sup:
                 rpn_loc_loss = self._fast_rcnn_loc_loss(rpn_loc, gt_rpn_loc, gt_rpn_label, self.rpn_sigma)
                 rpn_cls_loss = F.cross_entropy(rpn_score, gt_rpn_label, ignore_index=-1)
@@ -284,13 +284,13 @@ class FasterRCNNTrainer(nn.Module):
                     rpn_cls_loss = F.cross_entropy(rpn_score[Wb], gt_rpn_label[Wb], ignore_index=-1)
                     #rpn_loc_loss_all += rpn_loc_loss
                     rpn_cls_loss_all += rpn_cls_loss
-            # ------------------------------------------------------ #
-            #   利用真实框和建议框获得classifier网络应该有的预测结果
-            #   获得三个变量，分别是sample_roi, gt_roi_loc, gt_roi_label
-            #   sample_roi      [n_sample, ]
-            #   gt_roi_loc      [n_sample, 4]
-            #   gt_roi_label    [n_sample, ]
-            # ------------------------------------------------------ #
+            # ------------------------------------------------- ----- #
+            # 利用真實框和建議框來獲得classifier網路應有的預測結果
+            # 得到三個變量，分別是sample_roi, gt_roi_loc, gt_roi_label
+            # sample_roi [n_sample, ]
+            # gt_roi_loc [n_sample, 4]
+            # gt_roi_label [n_sample, ]
+            # ------------------------------------------------- ----- #
             sample_roi, gt_roi_loc, gt_roi_label = self.proposal_target_creator(roi, bbox, label, self.loc_normalize_std)
             sample_rois.append(torch.Tensor(sample_roi).type_as(rpn_locs))
             sample_indexes.append(torch.ones(len(sample_roi)).type_as(rpn_locs) * roi_indices[i][0])
@@ -303,7 +303,7 @@ class FasterRCNNTrainer(nn.Module):
         #print("\n\n\n\n===roi_cls_locs, roi_scores===")
         for i in range(n):
             # ------------------------------------------------------ #
-            #   根据建议框的种类，取出对应的回归预测结果
+            #   根據建議框的種類，取出對應的迴歸預測結果
             # ------------------------------------------------------ #
             n_sample = roi_cls_locs.size()[1]
             
@@ -316,7 +316,7 @@ class FasterRCNNTrainer(nn.Module):
             roi_loc     = roi_cls_loc[torch.arange(0, n_sample), gt_roi_label]
 
             # -------------------------------------------------- #
-            #   分别计算Classifier网络的回归损失和分类损失
+            #   分別計算Classifier網路的回歸損失和分類損失
             # -------------------------------------------------- #
             if sup:
                 roi_loc_loss = self._fast_rcnn_loc_loss(roi_loc, gt_roi_loc, gt_roi_label.data, self.roi_sigma)
@@ -346,7 +346,7 @@ class FasterRCNNTrainer(nn.Module):
                 losses = self.forward(imgs, bboxes, labels, scale, sup)
 
             #----------------------#
-            #   反向传播
+            #   反向傳播
             #----------------------#
             scaler.scale(losses[-1]).backward()
             scaler.step(self.optimizer)
