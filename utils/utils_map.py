@@ -811,10 +811,6 @@ def preprocess_gt(gt_path, class_names):
         image['file_name'] = image_id + '.jpg'
         image['width']     = 1
         image['height']    = 1
-        #-----------------------------------------------------------------#
-        #   感谢 多学学英语吧 的提醒
-        #   解决了'Results do not correspond to current coco set'问题
-        #-----------------------------------------------------------------#
         image['id']        = str(image_id)
 
         for line in lines_list:
@@ -910,7 +906,7 @@ def get_coco_map(class_names, path):
         results_dr  = preprocess_dr(DR_PATH, class_names)
         json.dump(results_dr, f, indent=4)
         if len(results_dr) == 0:
-            print("未检测到任何目标。")
+            print("未偵測到任何目標。")
             return [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0]
 
     cocoGt      = COCO(GT_JSON_PATH)
