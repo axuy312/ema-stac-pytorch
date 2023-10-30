@@ -110,7 +110,7 @@ class FRCNN(object):
     #---------------------------------------------------#
     #   检测图片
     #---------------------------------------------------#
-    def detect_image(self, image, img_name, xml_save_path = '',crop = False, count = False):
+    def detect_image(self, image, img_name = '', xml_save_path = '',crop = False, count = False):
         #---------------------------------------------------#
         #   计算输入图片的高和宽
         #---------------------------------------------------#
