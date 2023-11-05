@@ -334,12 +334,12 @@ class FasterRCNNTrainer(nn.Module):
         losses = losses + [sum(losses)]
         return losses
 
-    def train_step(self, imgs, bboxes, labels, scale, fp16=False, scaler=None, sup=True):
-        self.optimizer.zero_grad()
+    def train_step(self, imgs, bboxes, labels, scale, fp16=False, scaler=None, sup=True, step=True):
         if not fp16:
             losses = self.forward(imgs, bboxes, labels, scale, sup)
-            losses[-1].backward()
-            self.optimizer.step()
+            losses[-1].backward(retain_graph=True)
+            if step:
+                self.optimizer.step()
         else:
             from torch.cuda.amp import autocast
             with autocast():
@@ -348,9 +348,12 @@ class FasterRCNNTrainer(nn.Module):
             #----------------------#
             #   反向傳播
             #----------------------#
-            scaler.scale(losses[-1]).backward()
-            scaler.step(self.optimizer)
+            scaler.scale(losses[-1]).backward(retain_graph=True)
+            if step:
+                scaler.step(self.optimizer)
             scaler.update()
+        if step:
+            self.optimizer.zero_grad()
             
         return losses
 

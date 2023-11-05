@@ -11,7 +11,7 @@ from PIL import Image
 from frcnn import FRCNN
 
 if __name__ == "__main__":
-    frcnn = FRCNN()
+    frcnn = FRCNN(model_path="model_data/voc_weights_resnet.pth", confidence=0.8, nms_iou=0.1)
     #------------------------------------------------- -------------------------------------------------- -------#
     # mode用於指定測試的模式：
     # 'predict' 表示單張圖片預測，如果想對預測過程進行修改，如儲存圖片，截取物件等，可以先看下方詳細的註釋
@@ -55,8 +55,8 @@ if __name__ == "__main__":
     # dir_origin_path和dir_save_path僅在mode='dir_predict'時有效
     #------------------------------------------------- ------------------------#
     dir_origin_path = "dataset/PCB/JPEGImages_unlabeled"
-    dir_save_path   = ""
-    xml_save_path   = "dataset/PCB/Annotations_pseudo_label"
+    dir_save_path   = "result"
+    xml_save_path   = ""
 
     if mode == "predict":
         '''

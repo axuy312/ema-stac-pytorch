@@ -1,25 +1,32 @@
-import cv2
+import cv2, random
 import numpy as np
 import torch
 from PIL import Image
 from torch.utils.data.dataset import Dataset
 
 from utils.utils import cvtColor, preprocess_input
+from frcnn import FRCNN
+from tqdm import tqdm
 
 
 class FRCNNDataset(Dataset):
-    def __init__(self, annotation_lines, input_shape = [600, 600], train = True, cutout = False):
-        self.annotation_lines   = annotation_lines
-        self.length             = len(annotation_lines)
-        self.input_shape        = input_shape
-        self.train              = train
-        self.cutout             = cutout
+    def __init__(self, annotation_lines, input_shape = [600, 600], train = True, cutout = False, max_num = -1):
+        self.annotation_lines_all = annotation_lines
+        #random.shuffle(self.annotation_lines_all)
+        self.annotation_lines = None
+        if max_num == -1:
+            self.annotation_lines = self.annotation_lines_all
+        else:
+            self.annotation_lines = random.sample(self.annotation_lines_all, min(max_num, len(self.annotation_lines_all)))
+        self.input_shape = input_shape
+        self.train = train
+        self.cutout = cutout
 
     def __len__(self):
-        return self.length
+        return len(self.annotation_lines)
 
     def __getitem__(self, index):
-        index       = index % self.length
+        index       = index % len(self.annotation_lines)
         #------------------------------------------------- --#
         # 訓練時進行資料的隨機增強
         # 驗證時不進行資料的隨機增強
@@ -37,6 +44,12 @@ class FRCNNDataset(Dataset):
     def rand(self, a=0, b=1):
         return np.random.rand()*(b-a) + a
 
+    def resample_data(self, max_num = -1):
+        if max_num == -1:
+            self.annotation_lines = self.annotation_lines_all
+        else:
+            self.annotation_lines = random.sample(self.annotation_lines_all, min(max_num, len(self.annotation_lines_all)))
+        
     def get_random_data(self, annotation_line, input_shape, jitter=.3, hue=.1, sat=0.7, val=0.4, random=True):
         line = annotation_line.split()
         #------------------------------#
@@ -171,8 +184,32 @@ class FRCNNDataset(Dataset):
                     image_data[g_y:g_y+square_size, g_x:g_x+square_size] = gray_square
                     num_cutout -= 1
         
-        
         return image_data, box
+    
+    def updateGT(self, model):
+        #不能用self.frcnn
+        frcnn = FRCNN(model_path="", confidence=0.8, nms_iou=0.1, show_config=False)
+        #get teacher pseudo label
+        
+        box_cnt = 0
+        #tmp = []
+        with torch.no_grad():
+            with tqdm(total=len(self.annotation_lines),desc=f'Pseudo updating...',postfix=dict,mininterval=0.3) as pbar:
+                for i, line in enumerate(self.annotation_lines):
+                    img_path = line.split(" ")[0]
+                    
+                    image = Image.open(img_path)
+                    labels, confs, boxes = frcnn.detect_image(image, output="list", model=model)
+                    new_line = img_path
+                    for j in range(len(labels)):
+                        new_line = f"{new_line} {int(boxes[j][0])},{int(boxes[j][1])},{int(boxes[j][2])},{int(boxes[j][3])},{labels[j]}"
+                        box_cnt += 1
+                        pbar.set_postfix(**{'#box'    : box_cnt})
+                    self.annotation_lines[i] = new_line
+                    #if len(labels) != 0:
+                    #    tmp.append(new_line)
+                    pbar.update(1)
+        #self.annotation_lines = tmp
 
 # DataLoader中collate_fn使用
 def frcnn_dataset_collate(batch):

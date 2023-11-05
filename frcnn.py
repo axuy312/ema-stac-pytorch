@@ -30,7 +30,7 @@ class FRCNN(object):
         # 驗證集損失較低不代表mAP較高，僅代表該權值在驗證集上泛化表現較好。
         # 如果出現shape不匹配，同時要注意訓練時的model_path和classes_path參數的修改
         #------------------------------------------------- -------------------------#
-        "model_path"    : 'logs/ex1/ep180-loss0.755-val_loss1.298.pth',
+        "model_path"    : 'model_data/voc_weights_resnet.pth',
         "classes_path"  : 'model_data/classes.txt',
         #---------------------------------------------------------------------#
         #   網路的backbone特徵提取網絡，resnet50或vgg
@@ -53,6 +53,10 @@ class FRCNN(object):
         # 沒有GPU可以設定成False
         #-------------------------------------#
         "cuda"          : True,
+        #-------------------------------------#
+        # show_config
+        #-------------------------------------#
+        "show_config"          : True,
     }
 
     @classmethod
@@ -75,6 +79,7 @@ class FRCNN(object):
         self.class_names, self.num_classes  = get_classes(self.classes_path)
 
         self.std    = torch.Tensor([0.1, 0.1, 0.2, 0.2]).repeat(self.num_classes + 1)[None]
+        
         if self.cuda:
             self.std    = self.std.cuda()
         self.bbox_util  = DecodeBox(self.std, self.num_classes)
@@ -86,8 +91,9 @@ class FRCNN(object):
         self.colors = list(map(lambda x: colorsys.hsv_to_rgb(*x), hsv_tuples))
         self.colors = list(map(lambda x: (int(x[0] * 255), int(x[1] * 255), int(x[2] * 255)), self.colors))
         self.generate()
-
-        show_config(**self._defaults)
+        
+        if self.show_config:
+            show_config(**self._defaults)
 
     
     #------------------------------------------------- --#
@@ -97,20 +103,23 @@ class FRCNN(object):
         #-------------------------------------#
         # 載入模型與權值
         #-------------------------------------#
-        self.net    = FasterRCNN(self.num_classes, "predict", anchor_scales = self.anchors_size, backbone = self.backbone)
-        device      = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
-        self.net.load_state_dict(torch.load(self.model_path, map_location=device))
-        self.net    = self.net.eval()
-        print('{} model, anchors, and classes loaded.'.format(self.model_path))
+        if self.model_path != "":
+            device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
+            self.net = FasterRCNN(self.num_classes, "predict", anchor_scales = self.anchors_size, backbone = self.backbone)
+            self.net.load_state_dict(torch.load(self.model_path, map_location=device))
+            print('{} model, anchors, and classes loaded.'.format(self.model_path))
+            self.net    = self.net.eval()
+            if self.cuda:
+                self.net = nn.DataParallel(self.net)
+                self.net = self.net.cuda()
+        else:
+            self.net = None
         
-        if self.cuda:
-            self.net = nn.DataParallel(self.net)
-            self.net = self.net.cuda()
     
     #---------------------------------------------------#
     #   檢測圖片
     #---------------------------------------------------#
-    def detect_image(self, image, img_name = '', xml_save_path = '',crop = False, count = False):
+    def detect_image(self, image, img_name = '', xml_save_path = '',crop = False, count = False, output = "default", model = None):
         #---------------------------------------------------#
         #   計算輸入圖片的高和寬
         #---------------------------------------------------#
@@ -137,13 +146,15 @@ class FRCNN(object):
             images = torch.from_numpy(image_data)
             if self.cuda:
                 images = images.cuda()
-            
             #------------------------------------------------- ------------#
             # roi_cls_locs 建議框的調整參數
             # roi_scores 建議框的種類得分
             # rois 建議框的座標
             #------------------------------------------------- ------------#
-            roi_cls_locs, roi_scores, rois, _ = self.net(images)
+            if model != None:
+                roi_cls_locs, roi_scores, rois, _ = model(images)
+            else:
+                roi_cls_locs, roi_scores, rois, _ = self.net(images)
             #------------------------------------------------- ------------#
             # 利用classifier的預測結果對建議框進行解碼，取得預測框
             #------------------------------------------------- ------------#
@@ -153,11 +164,23 @@ class FRCNN(object):
             # 如果沒有偵測出物體，返回原圖
             #------------------------------------------------- --------#         
             if len(results[0]) <= 0:
-                return image
+                if output == "default":
+                    return image
+                elif output == "list":
+                    return [], [], []
                 
             top_label   = np.array(results[0][:, 5], dtype = 'int32')
             top_conf    = results[0][:, 4]
             top_boxes   = results[0][:, :4]
+        
+        if output == "list":
+            if len(top_boxes) != 0:
+                boxestmp = top_boxes.copy()
+                top_boxes[:, 0] = boxestmp[:, 1]
+                top_boxes[:, 1] = boxestmp[:, 0]
+                top_boxes[:, 2] = boxestmp[:, 3]
+                top_boxes[:, 3] = boxestmp[:, 2]
+            return top_label, top_conf, top_boxes
         
         #---------------------------------------------------------#
         #   設定字體與邊框厚度

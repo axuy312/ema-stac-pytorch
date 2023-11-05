@@ -63,8 +63,7 @@ if __name__ == "__main__":
 
     directories = {
         'train': ('Annotations_labeled_train', 'JPEGImages_labeled'),
-        'val':   ('Annotations_labeled_val', 'JPEGImages_labeled'),
-        'unsup': ('Annotations_pseudo_label', 'JPEGImages_unlabeled')
+        'val':   ('Annotations_labeled_val', 'JPEGImages_labeled')
     }
 
     for d, (anno, img) in directories.items():

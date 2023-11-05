@@ -573,7 +573,7 @@ def get_map(MINOVERLAP, draw_plot, score_threhold=0.5, path = './map_out'):
             F1  = np.array(rec)*np.array(prec)*2 / np.where((np.array(prec)+np.array(rec))==0, 1, (np.array(prec)+np.array(rec)))
 
             sum_AP  += ap
-            text    = "{0:.2f}%".format(ap*100) + " = " + class_name + " AP " #class_name + " AP = {0:.2f}%".format(ap*100)
+            text    = "{0:.2f}%".format(ap*100) + " = " + class_name + " AP " + " "*(15-len(class_name)) #class_name + " AP = {0:.2f}%".format(ap*100)
 
             if len(prec)>0:
                 F1_text         = "{0:.2f}".format(F1[score_threhold_idx]) + " = " + class_name + " F1 "

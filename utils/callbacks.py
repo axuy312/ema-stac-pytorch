@@ -78,7 +78,7 @@ class LossHistory():
 
 class EvalCallback():
     def __init__(self, net, input_shape, class_names, num_classes, val_lines, log_dir, cuda, \
-            map_out_path=".temp_map_out", max_boxes=100, confidence=0.05, nms_iou=0.5, letterbox_image=True, MINOVERLAP=0.5, eval_flag=True, period=1):
+            map_out_path=".temp_map_out", max_boxes=100, confidence=0.02, nms_iou=0.5, letterbox_image=True, MINOVERLAP=0.5, eval_flag=True, period=1, teacher=None):
         super(EvalCallback, self).__init__()
         
         self.net                = net
@@ -96,14 +96,19 @@ class EvalCallback():
         self.MINOVERLAP         = MINOVERLAP
         self.eval_flag          = eval_flag
         self.period             = period
+        self.teacher            = teacher
+        if self.cuda and self.teacher != None:
+            self.teacher.cuda()
         
         self.std    = torch.Tensor([0.1, 0.1, 0.2, 0.2]).repeat(self.num_classes + 1)[None]
         if self.cuda:
             self.std    = self.std.cuda()
         self.bbox_util  = DecodeBox(self.std, self.num_classes)
 
-        self.maps       = [0]
-        self.epoches    = [0]
+        self.maps       = []
+        self.maps_t     = []
+        self.epoches    = []
+        self.epoches_t  = []
         if self.eval_flag:
             with open(os.path.join(self.log_dir, "epoch_map.txt"), 'a') as f:
                 f.write(str(0))
@@ -112,7 +117,7 @@ class EvalCallback():
     #---------------------------------------------------#
     # 
     #---------------------------------------------------#
-    def get_map_txt(self, image_id, image, class_names, map_out_path):
+    def get_map_txt(self, image_id, image, class_names, map_out_path, mode="Student"):
         f = open(os.path.join(map_out_path, "detection-results/"+image_id+".txt"),"w")
         #---------------------------------------------------#
         # 計算輸入圖片的高和寬
@@ -138,8 +143,10 @@ class EvalCallback():
             images = torch.from_numpy(image_data)
             if self.cuda:
                 images = images.cuda()
-
-            roi_cls_locs, roi_scores, rois, _ = self.net(images)
+            if mode=="Student":
+                roi_cls_locs, roi_scores, rois, _ = self.net(images)
+            elif self.teacher != None:
+                roi_cls_locs, roi_scores, rois, _ = self.teacher(images)
             #-------------------------------------------------------------#
             # 利用classifier的預測結果對建議框進行解碼，取得預測框
             #-------------------------------------------------------------#
@@ -197,7 +204,7 @@ class EvalCallback():
                 #------------------------------#
                 # 獲得預測txt
                 #------------------------------#
-                self.get_map_txt(image_id, image, self.class_names, self.map_out_path)
+                self.get_map_txt(image_id, image, self.class_names, self.map_out_path, mode="Student")
                 
                 #------------------------------#
                 # 獲得真實框txt
@@ -235,3 +242,67 @@ class EvalCallback():
 
             print("Get map done.")
             shutil.rmtree(self.map_out_path)
+            
+            ### Teacher Map
+            if self.teacher != None:
+                if self.cuda:
+                    self.teacher.cuda()
+                if not os.path.exists(self.map_out_path):
+                    os.makedirs(self.map_out_path)
+                if not os.path.exists(os.path.join(self.map_out_path, "ground-truth")):
+                    os.makedirs(os.path.join(self.map_out_path, "ground-truth"))
+                if not os.path.exists(os.path.join(self.map_out_path, "detection-results")):
+                    os.makedirs(os.path.join(self.map_out_path, "detection-results"))
+                print("Get Teacher map.")
+                for annotation_line in tqdm(self.val_lines):
+                    line        = annotation_line.split()
+                    image_id    = os.path.basename(line[0]).split('.')[0]
+                    #------------------------------#
+                    # 讀取影像並轉換成RGB影像
+                    #------------------------------#
+                    image       = Image.open(line[0])
+                    #------------------------------#
+                    # 獲得預測框
+                    #------------------------------#
+                    gt_boxes    = np.array([np.array(list(map(int,box.split(',')))) for box in line[1:]])
+                    #------------------------------#
+                    # 獲得預測txt
+                    #------------------------------#
+                    self.get_map_txt(image_id, image, self.class_names, self.map_out_path, mode="Teacher")
+                    
+                    #------------------------------#
+                    # 獲得真實框txt
+                    #------------------------------#
+                    with open(os.path.join(self.map_out_path, "ground-truth/"+image_id+".txt"), "w") as new_f:
+                        for box in gt_boxes:
+                            left, top, right, bottom, obj = box
+                            obj_name = self.class_names[obj]
+                            new_f.write("%s %s %s %s %s\n" % (obj_name, left, top, right, bottom))
+                            
+                print("Calculate Teacher Map.")
+                try:
+                    temp_map = get_coco_map(class_names = self.class_names, path = self.map_out_path)[1]
+                except:
+                    temp_map = get_map(self.MINOVERLAP, False, path = self.map_out_path)
+                self.maps_t.append(temp_map)
+                self.epoches_t.append(epoch)
+
+                with open(os.path.join(self.log_dir, "epoch_map_Teacher.txt"), 'a') as f:
+                    f.write(str(temp_map))
+                    f.write("\n")
+                
+                plt.figure()
+                plt.plot(self.epoches_t, self.maps_t, 'blue', linewidth = 2, label='train map(teacher)')
+
+                plt.grid(True)
+                plt.xlabel('Epoch')
+                plt.ylabel('Map %s'%str(self.MINOVERLAP))
+                plt.title('A Map Curve')
+                plt.legend(loc="upper right")
+
+                plt.savefig(os.path.join(self.log_dir, "epoch_map_Teacher.png"))
+                plt.cla()
+                plt.close("all")
+
+                print("Get map done.")
+                shutil.rmtree(self.map_out_path)

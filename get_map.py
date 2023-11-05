@@ -29,7 +29,7 @@ if __name__ == "__main__":
     # 此處的classes_path用來指定需要測量VOC_map的類別
     # 一般情況下與訓練和預測所用的classes_path一致即可
     #------------------------------------------------- -------------------------------------#
-    classes_path    = 'model_data/voc_classes.txt'
+    classes_path    = 'model_data/classes.txt'
     #------------------------------------------------- -------------------------------------#
     # MINOVERLAP用來指定想要獲得的mAP0.x，mAP0.x的意義是什麼請同學們百度一下。
     # 例如計算mAP0.75，可以設定MINOVERLAP = 0.75。
@@ -51,7 +51,7 @@ if __name__ == "__main__":
     #
     # 該值一般不調整。
     #------------------------------------------------- -------------------------------------#
-    nms_iou         = 0.5
+    nms_iou         = 0.1
     #------------------------------------------------- -------------------------------------------------- ------------#
     # Recall和Precision不像AP是一個面積的概念，因此在閘限值不同時，網路的Recall和Precision值是不同的。
     #
@@ -89,7 +89,7 @@ if __name__ == "__main__":
 
     if map_mode == 0 or map_mode == 1:
         print("Load model.")
-        frcnn = FRCNN(confidence = confidence, nms_iou = nms_iou)
+        frcnn = FRCNN(model_path = "model_data/voc_weights_resnet.pth", confidence = confidence, nms_iou = nms_iou)
         print("Load model done.")
 
         print("Get predict result.")
