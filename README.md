@@ -29,4 +29,7 @@ Anaconda
 
 Source：[Drive](https://drive.google.com/drive/folders/1oECeWIv-BqyzoqRjtDqai0i1VIWb44DT?usp=sharing)
 
+## Train
+	python train
+
 
