@@ -1,4 +1,4 @@
-![image](https://github.com/axuy312/ema-stac-pytorch/assets/44252923/40750584-6b65-47bb-9c92-5d219e4a9fe8)# ema-stac-pytorch
+ema-stac-pytorch
 
 ## 環境
 Ubuntu == 20.04  
@@ -21,4 +21,9 @@ Anaconda
  	wget --load-cookies /tmp/cookies.txt "https://docs.google.com/uc?export=download&confirm=$(wget --quiet --save-cookies /tmp/cookies.txt --keep-session-cookies --no-check-certificate 'https://docs.google.com/uc?export=download&id=FILEID' -O- | sed -rn 's/.*confirm=([0-9A-Za-z_]+).*/\1\n/p')&id=1r8hfKvV62gBjDo22UK5drUCGsmrSfE61" -O pcb_dataset.zip && rm -rf /tmp/cookies.txt
 	unzip pcb_dataset.zip
 
- 
+  	// Download pretrain weight
+ 	cd model_data
+	wget --load-cookies /tmp/cookies.txt "https://docs.google.com/uc?export=download&confirm=$(wget --quiet --save-cookies /tmp/cookies.txt --keep-session-cookies --no-check-certificate 'https://docs.google.com/uc?export=download&id=FILEID' -O- | sed -rn 's/.*confirm=([0-9A-Za-z_]+).*/\1\n/p')&id=1DM6okPI1MELM_ktj6FzUYGy-XOiL7SDN" -O voc_weights_vgg.pth && rm -rf /tmp/cookies.txt
+	wget --load-cookies /tmp/cookies.txt "https://docs.google.com/uc?export=download&confirm=$(wget --quiet --save-cookies /tmp/cookies.txt --keep-session-cookies --no-check-certificate 'https://docs.google.com/uc?export=download&id=FILEID' -O- | sed -rn 's/.*confirm=([0-9A-Za-z_]+).*/\1\n/p')&id=1YqN2M5YVKpFc1T4oyWg1gR0gBC4VN5pr" -O voc_weights_resnet.pth && rm -rf /tmp/cookies.txtc
+	cd ..
+
