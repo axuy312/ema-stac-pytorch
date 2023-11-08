@@ -27,3 +27,6 @@ Anaconda
 	wget --load-cookies /tmp/cookies.txt "https://docs.google.com/uc?export=download&confirm=$(wget --quiet --save-cookies /tmp/cookies.txt --keep-session-cookies --no-check-certificate 'https://docs.google.com/uc?export=download&id=FILEID' -O- | sed -rn 's/.*confirm=([0-9A-Za-z_]+).*/\1\n/p')&id=1YqN2M5YVKpFc1T4oyWg1gR0gBC4VN5pr" -O voc_weights_resnet.pth && rm -rf /tmp/cookies.txtc
 	cd ..
 
+Source：[Drive](https://drive.google.com/drive/folders/1oECeWIv-BqyzoqRjtDqai0i1VIWb44DT?usp=sharing)
+
+
